@@ -595,4 +595,9 @@ window.K = window.K || {};
   window.addEventListener("hashchange", route);
   document.addEventListener("keydown", (e) => { if (keyHandler) keyHandler(e); });
   route();
+
+  // تفعيل العمل دون إنترنت عند التشغيل من الموقع (لا يعمل عند فتح الملف مباشرة).
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
 })();
