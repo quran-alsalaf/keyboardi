@@ -15,6 +15,17 @@ window.K = window.K || {};
   assign("th", "Space");
   K.FINGER_OF = FINGER_OF;
 
+  // توزيع خاص بالتخطيط العربي للماك: الذال للسبابة، والطاء للوسطى، والظاء للبنصر.
+  const FINGER_OVERRIDES = { ar_mac: { KeyC: "li", KeyX: "lm", KeyZ: "lr" } };
+  K.fingerOf = (course, code) => (FINGER_OVERRIDES[course] || {})[code] || FINGER_OF[code];
+
+  // العربية: Shift بالخنصر الأيسر، إلا إذا كان الحرف نفسه على الخنصر الأيسر.
+  // الإنجليزية: Shift باليد المقابلة لليد التي تكتب الحرف.
+  K.shiftFor = function (course, finger) {
+    if (course === "en") return finger && finger[0] === "l" ? "ShiftRight" : "ShiftLeft";
+    return finger === "lp" ? "ShiftRight" : "ShiftLeft";
+  };
+
   K.FINGER_NAMES = {
     lp: "الخنصر الأيسر", lr: "البنصر الأيسر", lm: "الوسطى اليسرى", li: "السبابة اليسرى",
     ri: "السبابة اليمنى", rm: "الوسطى اليمنى", rr: "البنصر الأيمن", rp: "الخنصر الأيمن", th: "الإبهام",
@@ -66,7 +77,7 @@ window.K = window.K || {};
       SHAPES[this.shape].forEach((row, r) => {
         let x = 1;
         row.forEach((k) => {
-          const f = k.code ? FINGER_OF[k.code] : "";
+          const f = k.code ? K.fingerOf(this.course, k.code) : "";
           const fnCls = k.fn ? " fn" : "";
           const rows = k.tall ? `${r + 1}/span 2` : r + 1;
           const bump = k.code === "KeyF" || k.code === "KeyJ" ? '<i class="bump"></i>' : "";

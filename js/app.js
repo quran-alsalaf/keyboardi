@@ -168,8 +168,8 @@ window.K = window.K || {};
     const rev = K.revCache[course] = K.revCache[course] || K.reverseLayout(K.getLayout(course, store.settings.shape));
     const k = rev[ch];
     if (!k) return null;
-    const finger = K.FINGER_OF[k.code];
-    const shiftCode = k.shift ? (finger && finger[0] === "l" ? "ShiftRight" : "ShiftLeft") : null;
+    const finger = K.fingerOf(course, k.code);
+    const shiftCode = k.shift ? K.shiftFor(course, finger) : null;
     return { code: k.code, finger, shiftCode };
   }
   K.revCache = {};
