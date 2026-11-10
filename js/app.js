@@ -208,7 +208,7 @@ window.K = window.K || {};
 
     const screens = meta.screens;
     const totals = { correct: 0, errors: 0, ms: 0, missed: {} };
-    let idx = 0, typer = null;
+    let idx = 0, typer = null, lastIndex = -1;
     const typing = $("#typing");
     typing.dir = lang === "ar" ? "rtl" : "ltr";
     typing.className = "typing " + (lang === "ar" ? "ar" : "en");
@@ -228,12 +228,22 @@ window.K = window.K || {};
       if (!h) { kb.clear(); $("#hint").innerHTML = ""; return; }
       kb.setLayer(!!h.shiftCode);
       kb.highlight(h.code, h.shiftCode);
-      K.setActiveFinger(hands, h.shiftCode ? [h.finger, h.shiftCode === "ShiftRight" ? "rp" : "lp"] : h.finger);
+      const reach = { [h.finger]: K.reachOf(h.code, h.finger) };
+      if (h.shiftCode) {
+        const shiftFinger = h.shiftCode === "ShiftRight" ? "rp" : "lp";
+        reach[shiftFinger] = K.reachOf(h.shiftCode, shiftFinger);
+      }
+      K.setActiveFinger(hands, Object.keys(reach), reach);
+      if (t.i !== lastIndex) K.tapFinger(hands, Object.keys(reach));
+      lastIndex = t.i;
+      // المؤشر يأخذ لون الإصبع المطلوب، إلا في خطوات الكتابة بلا لوحة.
+      if (screens[idx].blind) typing.style.removeProperty("--cur");
+      else typing.style.setProperty("--cur", `var(--${h.finger})`);
       const screen = screens[idx];
       if (screen.blind) { $("#hint").textContent = ""; return; }
       const label = ch === " " ? "المسافة" : K.charLabel(ch);
       const shiftTxt = h.shiftCode ? ` مع <b dir="ltr">shift</b> ${h.shiftCode === "ShiftRight" ? "اليمنى" : "اليسرى"}` : "";
-      $("#hint").innerHTML = `اضغط <span class="kbd-chip" dir="auto">${esc(label)}</span> بإصبع <b>${K.FINGER_NAMES[h.finger]}</b>${shiftTxt}`;
+      $("#hint").innerHTML = `اضغط <span class="kbd-chip hl" style="--chip:var(--${h.finger})" dir="auto">${esc(label)}</span> بإصبع <b>${K.FINGER_NAMES[h.finger]}</b>${shiftTxt}`;
     }
 
     function showScreen() {
@@ -552,6 +562,12 @@ window.K = window.K || {};
     setView(`<div class="wrap narrow">
       <div class="course-top"><h1>الإعدادات</h1></div>
       <div class="panel">
+        <h2>المظهر</h2>
+        ${radio("theme", "auto", "تلقائي", "يتبع مظهر جهازك.")}
+        ${radio("theme", "light", "فاتح", "")}
+        ${radio("theme", "dark", "داكن", "خلفية سوداء مريحة، وكل مفتاح بلون إصبعه.")}
+      </div>
+      <div class="panel">
         <h2>تخطيط العربية</h2>
         ${radio("arLayout", "ar_mac", "Arabic (ماك)", "التخطيط الأصلي في macOS، وهو الأنسب لأجهزة الماك.")}
         ${radio("arLayout", "ar_pc", "Arabic – PC", "مطابق للوحات الويندوز المعتادة، ويتوفر في macOS أيضًا.")}
@@ -574,12 +590,36 @@ window.K = window.K || {};
         <button class="btn danger" id="reset">مسح كل التقدم</button>
       </div>
     </div>`, "settings");
-    document.querySelectorAll('input[type="radio"]').forEach((i) => i.addEventListener("change", () => { store.setSetting(i.name, i.value); K.revCache = {}; }));
+    document.querySelectorAll('input[type="radio"]').forEach((i) => i.addEventListener("change", () => { store.setSetting(i.name, i.value); K.revCache = {}; applyTheme(); }));
     document.querySelectorAll('input[type="checkbox"]').forEach((i) => i.addEventListener("change", () => store.setSetting(i.name, i.checked)));
     $("#reset").addEventListener("click", () => {
-      if (confirm("سيُحذف كل تقدمك وإحصائياتك نهائيًا. هل تريد المتابعة؟")) { store.reset(); K.revCache = {}; location.hash = "#/"; renderCourse(); }
+      if (confirm("سيُحذف كل تقدمك وإحصائياتك نهائيًا. هل تريد المتابعة؟")) { store.reset(); K.revCache = {}; applyTheme(); location.hash = "#/"; renderCourse(); }
     });
   }
+
+  // ---- المظهر ----
+  const darkQuery = matchMedia("(prefers-color-scheme: dark)");
+  const themeBtn = $("#theme-btn");
+  const currentTheme = () => {
+    const s = store.settings.theme;
+    return s === "auto" ? (darkQuery.matches ? "dark" : "light") : s;
+  };
+  function applyTheme() {
+    const t = currentTheme();
+    document.documentElement.dataset.theme = t;
+    $("#theme-color").content = t === "dark" ? "#16191e" : "#1b76d1";
+    const label = t === "dark" ? "التبديل إلى الوضع الفاتح" : "التبديل إلى الوضع الداكن";
+    themeBtn.title = label;
+    themeBtn.setAttribute("aria-label", label);
+  }
+  darkQuery.addEventListener("change", applyTheme);
+  themeBtn.addEventListener("click", () => {
+    store.setSetting("theme", currentTheme() === "dark" ? "light" : "dark");
+    applyTheme();
+    themeBtn.blur(); // حتى لا تُفعّله المسافة أثناء الكتابة
+    if (location.hash.startsWith("#/settings")) renderSettings();
+  });
+  applyTheme();
 
   // ---- التوجيه ----
   function route() {

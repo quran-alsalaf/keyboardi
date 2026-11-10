@@ -147,17 +147,47 @@ window.K = window.K || {};
     FINGERS.forEach(([f, x, y, w, h]) => {
       s += `<rect class="finger" data-f="${side}${f}" x="${x}" y="${y}" width="${w}" height="${h}" rx="16"/>`;
     });
-    s += `<rect class="finger" data-f="th" x="206" y="104" width="32" height="84" rx="16" transform="rotate(38 222 146)"/>`;
+    s += `<g transform="rotate(38 222 146)"><rect class="finger" data-f="th" x="206" y="104" width="32" height="84" rx="16"/></g>`;
     return s + "</g>";
   }
   K.handsHtml = function () {
-    return `<svg class="hands" viewBox="0 0 700 200" aria-hidden="true">${handSvg("l", 30, false)}${handSvg("r", 670, true)}</svg>`;
+    return `<svg class="hands" viewBox="0 -28 700 228" aria-hidden="true">${handSvg("l", 30, false)}${handSvg("r", 670, true)}</svg>`;
   };
-  K.setActiveFinger = function (root, finger) {
+  // موضع كل مفتاح أفقيًا وصفّه، لحساب مقدار تمدد الإصبع وميله نحو المفتاح.
+  const KEY_POS = {};
+  digits.forEach((c, i) => (KEY_POS[c] = { x: i - 0.75, row: 0 }));
+  top.forEach((c, i) => (KEY_POS[c] = { x: i - 0.25, row: 1 }));
+  home.forEach((c, i) => (KEY_POS[c] = { x: i, row: 2 }));
+  bottom.forEach((c, i) => (KEY_POS[c] = { x: i + 0.5, row: 3 }));
+  KEY_POS.Backslash = { x: 11.75, row: 1 };
+  const FINGER_HOME = { lp: 0, lr: 1, lm: 2, li: 3, ri: 6, rm: 7, rr: 8, rp: 9 };
+  const ROW_STRETCH = [1.28, 1.16, 1.05, 0.88];
+
+  K.reachOf = function (code, finger) {
+    if (code === "Space") return { s: 0.96, r: 0 };
+    if (code === "ShiftLeft" || code === "ShiftRight") return { s: 0.9, r: -14 };
+    const p = KEY_POS[code];
+    if (!p || FINGER_HOME[finger] == null) return { s: 1, r: 0 };
+    const dx = (p.x - FINGER_HOME[finger]) * (finger[0] === "l" ? 1 : -1);
+    return { s: ROW_STRETCH[p.row], r: Math.max(-16, Math.min(16, Math.round(dx * 9))) };
+  };
+
+  K.setActiveFinger = function (root, finger, reach) {
+    const list = Array.isArray(finger) ? finger : [finger];
     root.querySelectorAll(".finger").forEach((n) => {
-      const on = n.dataset.f === finger || (Array.isArray(finger) && finger.includes(n.dataset.f));
-      n.setAttribute("class", "finger" + (on ? " on on-" + n.dataset.f : ""));
+      const f = n.dataset.f, on = list.includes(f), r = on && reach && reach[f];
+      n.setAttribute("class", "finger" + (on ? " on on-" + f : ""));
+      n.style.setProperty("--s", r ? r.s : 1);
+      n.style.setProperty("--r", (r ? r.r : 0) + "deg");
     });
+  };
+
+  // ضغطة قصيرة تُظهر حركة الإصبع حتى لو تكرر المفتاح نفسه.
+  K.tapFinger = function (root, fingers) {
+    fingers.forEach((f) => root.querySelectorAll(`.finger[data-f="${f}"]`).forEach((n) => {
+      n.classList.add("tap");
+      setTimeout(() => n.classList.remove("tap"), 80);
+    }));
   };
 
   // ---- ترتيب النص ----

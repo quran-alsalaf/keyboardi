@@ -8,7 +8,16 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231b76d1'/%3E%3Crect x='6' y='6' width='20' height='20' rx='3' fill='%23fff'/%3E%3Crect x='11' y='20' width='10' height='2.5' rx='1' fill='%231b76d1'/%3E%3C/svg%3E">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <meta name="theme-color" content="#1b76d1">
+  <meta name="theme-color" content="#1b76d1" id="theme-color">
+  <script>
+    // يطبّق المظهر قبل رسم الصفحة حتى لا تومض باللون الفاتح.
+    (function () {
+      var t = "auto";
+      try { t = JSON.parse(localStorage.getItem("keyboardi.v1")).settings.theme || "auto"; } catch (e) {}
+      if (t === "auto") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="كيبوردي">
@@ -24,6 +33,10 @@
         <a href="#/stats" data-nav="stats">الإحصائيات</a>
         <a href="#/settings" data-nav="settings">الإعدادات</a>
       </nav>
+      <button class="theme-btn" id="theme-btn" type="button">
+        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 019.4 3.5a8.6 8.6 0 1011.1 11.1z"/></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.6"/><path d="M12 1.6v3M12 19.4v3M1.6 12h3M19.4 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
     </div>
   </header>
   <main id="app"></main>

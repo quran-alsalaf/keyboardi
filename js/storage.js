@@ -4,7 +4,7 @@ window.K = window.K || {};
 (function () {
   const KEY = "keyboardi.v1";
   const defaults = () => ({
-    settings: { lang: "ar", arLayout: "ar_mac", shape: "iso", showKeyboard: true, showHands: true, sound: true, unlockAll: false },
+    settings: { lang: "ar", arLayout: "ar_mac", shape: "iso", showKeyboard: true, showHands: true, sound: true, unlockAll: false, theme: "auto" },
     progress: {}, keys: { ar: {}, en: {} }, history: [], best: {},
   });
 
