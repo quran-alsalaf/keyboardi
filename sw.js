@@ -1,5 +1,5 @@
 // يخزّن ملفات التطبيق ليعمل دون إنترنت، ويحدّثها في الخلفية عند توفر الاتصال.
-const CACHE = "keyboardi-v3";
+const CACHE = "keyboardi-v4";
 const FILES = [
   "./",
   "index.html",

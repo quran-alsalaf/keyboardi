@@ -231,7 +231,7 @@ window.K = window.K || {};
         for (let k = c.start; k < c.end; k++) this.indexToCluster[k] = n;
         if (c.s === " ") {
           if (inWord) { html += "</span>"; inWord = false; }
-          html += `<span class="c sp" data-c="${n}"> </span>`;
+          html += `<span class="c sp${n === clusters.length - 1 ? " last" : ""}" data-c="${n}"> </span>`;
           return;
         }
         if (!inWord) { html += '<span class="w">'; inWord = true; }

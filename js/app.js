@@ -255,7 +255,7 @@ window.K = window.K || {};
       $("#blind").hidden = !blind;
       typing.classList.toggle("large", s.kind === "intro");
       typer = new K.Typer({
-        el: typing, text: s.text, lang, layout,
+        el: typing, text: s.text.trimEnd() + " ", lang, layout, // المسافة الأخيرة هي التي تنهي التمرين
         onChange,
         onError: (code) => { K.beep(); kb.flash(code); },
         onDone: finishScreen,
